@@ -1,9 +1,25 @@
-﻿CREATE TABLE IF NOT EXISTS user_dialog_states -- состояния пользователей в диалогах
-(
-    id               SERIAL PRIMARY KEY,
-    telegram_user_id BIGINT NOT NULL,
-    role             TEXT   NOT NULL CHECK (role IN ('user', 'admin')),
-    state            TEXT   NOT NULL,
-    context          JSONB     DEFAULT '{}'::JSONB,
-    updated_at       TIMESTAMP DEFAULT NOW()
-);
+-- USERS
+ALTER TABLE users
+    ADD COLUMN state TEXT DEFAULT 'initial',
+    ADD COLUMN updated_at TIMESTAMP DEFAULT now();
+
+-- ADMINS
+ALTER TABLE admins
+    ADD COLUMN state TEXT DEFAULT 'initial',
+    ADD COLUMN updated_at TIMESTAMP DEFAULT now();
+
+-- CARS
+ALTER TABLE cars
+    ADD COLUMN updated_at TIMESTAMP DEFAULT now();
+
+-- AUCTIONS
+ALTER TABLE auctions
+    ADD COLUMN updated_at TIMESTAMP DEFAULT now();
+
+-- BIDS
+ALTER TABLE bids
+    ADD COLUMN updated_at TIMESTAMP DEFAULT now();
+
+-- WINNERS
+ALTER TABLE winners
+    ADD COLUMN updated_at TIMESTAMP DEFAULT now();
