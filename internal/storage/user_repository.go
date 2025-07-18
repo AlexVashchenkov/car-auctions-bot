@@ -88,3 +88,17 @@ func (r *UserRepository) Update(user *models.User) error {
 	_, err := r.db.NamedExec(query, params)
 	return err
 }
+
+func (r *UserRepository) GetBidsByTelegramID(id int64) ([]models.Bid, error) {
+	var bids []models.Bid
+	err := r.db.Get(&bids, `SELECT (id, user_id, auction_id, amount, created_at, updated_at) FROM bids WHERE user_id=$1`, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return bids, nil
+	}
+}

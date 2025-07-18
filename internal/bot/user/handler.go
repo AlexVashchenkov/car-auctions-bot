@@ -14,7 +14,7 @@ type UserHandler struct {
 }
 
 func (h *UserHandler) HandleUpdate(update tgbotapi.Update) {
-	user, err := h.Repository.GetByTelegramID(update.Message.From.ID)
+	user, err := h.Repository.GetByTelegramID(update.FromChat().ID)
 	if err != nil {
 		log.Println("DB error:", err)
 		return
@@ -23,26 +23,29 @@ func (h *UserHandler) HandleUpdate(update tgbotapi.Update) {
 	if update.Message.Text == "/start" || user == nil {
 		h.HandleStart(update)
 		return
+	} else if update.Message.Text == common.UserKeyboardMyBids {
+		h.HandleGetBids(update)
 	}
 
 	switch *user.State {
-	case "awaiting_agreement":
+	case common.UserStateAwaitingAgreement:
 		h.handleAgreement(update, user)
-	case "awaiting_name":
-		h.handleName(update, user)
-	case "awaiting_phone":
+	case common.UserRegistrationAwaitingInitials:
+		h.handleInitials(update, user)
+	case common.UserRegistrationAwaitingPhone:
 		h.handlePhone(update, user)
-	case "awaiting_email":
+	case common.UserRegistrationAwaitingEmail:
 		h.handleEmail(update, user)
-	case "main_menu":
+	case common.UserStateMainMenu:
 		h.sendMainMenu(update)
 	default:
+		h.Bot.Send(tgbotapi.NewMessage(update.FromChat().ID, "Извините, я Вас не понял."))
 		h.sendMainMenu(update)
 	}
 }
 
 func (h *UserHandler) HandleStart(update tgbotapi.Update) {
-	user, err := h.Repository.GetByTelegramID(update.Message.From.ID)
+	user, err := h.Repository.GetByTelegramID(update.FromChat().ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,7 +59,7 @@ func (h *UserHandler) HandleStart(update tgbotapi.Update) {
 			Email:      common.Ptr(""),
 		}
 
-		user.State = common.Ptr("awaiting_agreement")
+		user.State = common.Ptr(common.UserStateAwaitingAgreement)
 		err = h.Repository.Create(user)
 		if err != nil {
 			log.Fatal(err)
@@ -75,11 +78,22 @@ func (h *UserHandler) HandleStart(update tgbotapi.Update) {
 }
 
 func (h *UserHandler) sendMainMenu(update tgbotapi.Update) {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите действие:")
-	msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Мои ставки"),
-		),
-	)
+	msg := tgbotapi.NewMessage(update.FromChat().ID, "Выберите действие:")
+	msg.ReplyMarkup = common.UserKeyBoard
 	h.Bot.Send(msg)
+}
+
+func (h *UserHandler) HandleGetBids(update tgbotapi.Update) {
+	bids, err := h.Repository.GetBidsByTelegramID(update.FromChat().ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if bids == nil || len(bids) == 0 {
+		msg := tgbotapi.NewMessage(update.FromChat().ID, "У Вас сейчас нет активных ставок. Перейдите в канал с аукционами и сделайте свою первую ставку уже сейчас!")
+		h.Bot.Send(msg)
+	} else {
+		msg := tgbotapi.NewMessage(update.FromChat().ID, models.BidsToString(bids))
+		h.Bot.Send(msg)
+	}
 }

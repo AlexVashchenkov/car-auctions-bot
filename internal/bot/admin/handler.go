@@ -22,35 +22,61 @@ func (h *AdminHandler) HandleUpdate(update tgbotapi.Update) {
 	}
 
 	if admin == nil {
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, common.AdminBotProhibited)
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, common.AdminBotErrProhibited)
 		h.Bot.Send(msg)
 		return
 	}
 
 	if update.Message.Text == "/start" {
-		h.HandleStart(update)
+		h.handleStart(update)
 		return
+	} else if update.Message.Text == common.AdminKeyboardCreateAuction {
+		h.handleCreateAuction(update)
+	} else if update.Message.Text == common.AdminKeyboardAuctionList {
+		h.handleAuctionList(update)
+	} else if update.Message.Text == common.AdminKeyBoardEndAuction {
+		h.handleEndAuction(update)
+	} else if update.Message.Text == common.AdminKeyBoardDeleteAuction {
+		h.handleDeleteAuction(update)
+	} else if update.Message.Text == common.AdminKeyboardAddAdmin {
+		h.handleAddAdmin(update)
 	}
 
 	switch *admin.State {
-	case "main_menu":
+	case common.AdminStateMainMenu:
 		h.sendMainMenu(update)
 	default:
 		h.sendMainMenu(update)
 	}
 }
 
-func (h *AdminHandler) HandleStart(update tgbotapi.Update) {
-	h.sendMainMenu(update)
-	return
+func (h *AdminHandler) sendMainMenu(update tgbotapi.Update) {
+	msg := tgbotapi.NewMessage(update.FromChat().ID, "Выберите действие:")
+	msg.ReplyMarkup = common.AdminKeyboard
+	h.Bot.Send(msg)
 }
 
-func (h *AdminHandler) sendMainMenu(update tgbotapi.Update) {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Выберите действие:")
-	msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Мои ставки"),
-		),
-	)
-	h.Bot.Send(msg)
+func (h *AdminHandler) handleCreateAuction(update tgbotapi.Update) {
+
+}
+
+func (h *AdminHandler) handleAuctionList(update tgbotapi.Update) {
+
+}
+
+func (h *AdminHandler) handleEndAuction(update tgbotapi.Update) {
+
+}
+
+func (h *AdminHandler) handleDeleteAuction(update tgbotapi.Update) {
+
+}
+
+func (h *AdminHandler) handleAddAdmin(update tgbotapi.Update) {
+
+}
+
+func (h *AdminHandler) handleStart(update tgbotapi.Update) {
+	h.sendMainMenu(update)
+	return
 }

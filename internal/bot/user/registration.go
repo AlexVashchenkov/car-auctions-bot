@@ -20,7 +20,7 @@ func (h *UserHandler) handleAgreement(update tgbotapi.Update, user *models.User)
 		return
 	}
 
-	user.State = common.Ptr("awaiting_name")
+	user.State = common.Ptr(common.UserRegistrationAwaitingInitials)
 	_ = h.Repository.Update(user)
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите Вашу фамилию, имя и отчество:")
@@ -28,7 +28,7 @@ func (h *UserHandler) handleAgreement(update tgbotapi.Update, user *models.User)
 	h.Bot.Send(msg)
 }
 
-func (h *UserHandler) handleName(update tgbotapi.Update, user *models.User) {
+func (h *UserHandler) handleInitials(update tgbotapi.Update, user *models.User) {
 	parts := strings.Split(update.Message.Text, " ")
 	if len(parts) < 2 {
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Пожалуйста, введите корректные данные о Вашей фамилии, имени и отчестве:")
@@ -42,7 +42,7 @@ func (h *UserHandler) handleName(update tgbotapi.Update, user *models.User) {
 		user.MiddleName = common.Ptr(parts[2])
 	}
 
-	user.State = common.Ptr("awaiting_phone")
+	user.State = common.Ptr(common.UserRegistrationAwaitingPhone)
 	_ = h.Repository.Update(user)
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Введите ваш номер телефона или воспользуйтесь кнопкой ниже:")
@@ -80,7 +80,7 @@ func (h *UserHandler) handlePhone(update tgbotapi.Update, user *models.User) {
 		}
 	}
 
-	user.State = common.Ptr("awaiting_email")
+	user.State = common.Ptr(common.UserRegistrationAwaitingEmail)
 
 	_ = h.Repository.Update(user)
 
@@ -97,9 +97,10 @@ func (h *UserHandler) handleEmail(update tgbotapi.Update, user *models.User) {
 	}
 
 	user.Email = common.Ptr(update.Message.Text)
-	user.State = common.Ptr("main_menu")
+	user.State = common.Ptr(common.UserStateMainMenu)
 	_ = h.Repository.Update(user)
 
 	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Отлично! Вы успешно зарегистрировались.")
 	h.Bot.Send(msg)
+	h.sendMainMenu(update)
 }
